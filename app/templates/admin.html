@@ -1,0 +1,795 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="admin-page">
+
+    <div class="admin-header">
+        <div>
+            <h1>⚡ Campus AI Admin</h1>
+            <p>Monitor your AI campus assistant</p>
+        </div>
+
+        <form method="POST"
+              action="{{ url_for('main.admin_logout') }}">
+            <button class="logout-btn" type="submit">
+                Logout
+            </button>
+        </form>
+    </div>
+
+
+    <!-- STAT CARDS -->
+
+    <div class="stats-grid">
+
+        <div class="stat-card">
+            <div class="stat-icon">💬</div>
+            <div>
+                <div class="stat-number" id="conversationCount">
+                    —
+                </div>
+                <div class="stat-label">
+                    Conversations
+                </div>
+            </div>
+        </div>
+
+
+        <div class="stat-card">
+            <div class="stat-icon">📝</div>
+            <div>
+                <div class="stat-number" id="messageCount">
+                    —
+                </div>
+                <div class="stat-label">
+                    Messages
+                </div>
+            </div>
+        </div>
+
+
+        <div class="stat-card">
+            <div class="stat-icon">📚</div>
+            <div>
+                <div class="stat-number" id="campusItemCount">
+                    —
+                </div>
+                <div class="stat-label">
+                    Knowledge Items
+                </div>
+            </div>
+        </div>
+
+
+        <div class="stat-card">
+            <div class="stat-icon">👍</div>
+            <div>
+                <div class="stat-number" id="satisfaction">
+                    —
+                </div>
+                <div class="stat-label">
+                    Satisfaction
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- ANALYTICS -->
+
+    <div class="analytics-grid">
+
+        <div class="panel">
+
+            <div class="panel-header">
+                <h2>📊 Assistant Performance</h2>
+            </div>
+
+            <div class="performance">
+
+                <div class="performance-row">
+                    <span>Helpful answers</span>
+
+                    <strong id="helpfulCount">
+                        0
+                    </strong>
+                </div>
+
+
+                <div class="progress">
+                    <div
+                        id="helpfulBar"
+                        class="progress-bar">
+                    </div>
+                </div>
+
+
+                <div class="performance-row">
+                    <span>Not helpful</span>
+
+                    <strong id="notHelpfulCount">
+                        0
+                    </strong>
+                </div>
+
+
+                <div class="progress">
+                    <div
+                        id="notHelpfulBar"
+                        class="progress-bar negative">
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="panel">
+
+            <div class="panel-header">
+                <h2>🧠 Knowledge Base</h2>
+            </div>
+
+            <div id="categoryStats">
+                Loading...
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- KNOWLEDGE BASE -->
+
+    <div class="panel knowledge-panel">
+
+        <div class="panel-header">
+
+            <div>
+                <h2>📚 Campus Knowledge</h2>
+
+                <p>
+                    Manage information used by Campus AI.
+                </p>
+            </div>
+
+            <span class="verified">
+                ✓ Verified data
+            </span>
+
+        </div>
+
+
+        <div class="knowledge-list">
+
+            {% for item in items %}
+
+            <div class="knowledge-item">
+
+                <div class="knowledge-info">
+
+                    <div class="item-title">
+                        {{ item.title }}
+                    </div>
+
+                    <div class="item-meta">
+                        {{ item.category|capitalize }}
+                        •
+                        {{ item.source }}
+                    </div>
+
+                    <div class="item-content">
+                        {{ item.content }}
+                    </div>
+
+                </div>
+
+
+                <form
+                    method="POST"
+                    action="{{ url_for(
+                        'main.delete_item',
+                        item_id=item.id
+                    ) }}"
+                    onsubmit="return confirm('Delete this knowledge item?');">
+
+                    <button
+                        class="delete-btn"
+                        type="submit">
+
+                        Delete
+
+                    </button>
+
+                </form>
+
+            </div>
+
+            {% else %}
+
+            <div class="empty-state">
+                No campus knowledge items found.
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+    </div>
+
+
+    <!-- ADD KNOWLEDGE -->
+
+    <div class="panel add-panel">
+
+        <div class="panel-header">
+
+            <div>
+                <h2>➕ Add Campus Information</h2>
+
+                <p>
+                    Add verified information that the AI can retrieve.
+                </p>
+            </div>
+
+        </div>
+
+
+        <form
+            method="POST"
+            action="{{ url_for('main.add_item') }}"
+            class="knowledge-form">
+
+            <div class="form-row">
+
+                <div class="form-group">
+
+                    <label>
+                        Category
+                    </label>
+
+                    <select name="category" required>
+
+                        <option value="academics">
+                            Academics
+                        </option>
+
+                        <option value="faculty">
+                            Faculty
+                        </option>
+
+                        <option value="campus">
+                            Campus
+                        </option>
+
+                        <option value="events">
+                            Events
+                        </option>
+
+                        <option value="notices">
+                            Notices
+                        </option>
+
+                        <option value="services">
+                            Services
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        Source
+                    </label>
+
+                    <input
+                        name="source"
+                        placeholder="College notice / website / office"
+                        required>
+
+                </div>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>
+                    Title
+                </label>
+
+                <input
+                    name="title"
+                    placeholder="Example: Library Timings"
+                    required>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>
+                    Information
+                </label>
+
+                <textarea
+                    name="content"
+                    rows="5"
+                    placeholder="Enter verified campus information..."
+                    required></textarea>
+
+            </div>
+
+
+            <button
+                class="add-btn"
+                type="submit">
+
+                Add to Knowledge Base
+
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<style>
+
+.admin-page {
+    max-width: 1200px;
+    margin: 35px auto;
+    padding: 0 22px;
+}
+
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 28px;
+}
+
+.admin-header h1 {
+    margin: 0;
+}
+
+.admin-header p {
+    margin: 6px 0 0;
+    opacity: .6;
+}
+
+.logout-btn {
+    padding: 9px 16px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    background: white;
+    cursor: pointer;
+}
+
+
+.stats-grid {
+    display: grid;
+    grid-template-columns:
+        repeat(4, 1fr);
+
+    gap: 18px;
+    margin-bottom: 22px;
+}
+
+
+.stat-card {
+    background: white;
+    border-radius: 18px;
+    padding: 22px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+
+    box-shadow:
+        0 8px 30px rgba(0,0,0,.06);
+}
+
+
+.stat-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    background: #eef2ff;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 21px;
+}
+
+
+.stat-number {
+    font-size: 28px;
+    font-weight: 800;
+}
+
+.stat-label {
+    font-size: 13px;
+    opacity: .55;
+}
+
+
+.analytics-grid {
+    display: grid;
+    grid-template-columns:
+        1fr 1fr;
+
+    gap: 20px;
+    margin-bottom: 22px;
+}
+
+
+.panel {
+    background: white;
+    border-radius: 18px;
+    padding: 23px;
+    margin-bottom: 22px;
+
+    box-shadow:
+        0 8px 30px rgba(0,0,0,.06);
+}
+
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+}
+
+.panel-header h2 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.panel-header p {
+    margin: 6px 0;
+    font-size: 13px;
+    opacity: .55;
+}
+
+
+.performance-row {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 15px;
+    font-size: 14px;
+}
+
+
+.progress {
+    height: 9px;
+    background: #eef2f7;
+    border-radius: 20px;
+    overflow: hidden;
+    margin-top: 8px;
+}
+
+
+.progress-bar {
+    height: 100%;
+    width: 0%;
+    background: #22c55e;
+    transition: width .5s;
+}
+
+
+.progress-bar.negative {
+    background: #ef4444;
+}
+
+
+.category-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 11px 0;
+    border-bottom: 1px solid #eee;
+    font-size: 14px;
+}
+
+
+.category-row:last-child {
+    border-bottom: none;
+}
+
+
+.verified {
+    padding: 7px 11px;
+    border-radius: 20px;
+    background: #ecfdf5;
+    color: #15803d;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+
+.knowledge-item {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+
+    padding: 18px 0;
+
+    border-bottom: 1px solid #eee;
+}
+
+
+.knowledge-item:last-child {
+    border-bottom: none;
+}
+
+
+.item-title {
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+
+.item-meta {
+    font-size: 12px;
+    opacity: .55;
+    margin-bottom: 8px;
+}
+
+
+.item-content {
+    font-size: 14px;
+    line-height: 1.6;
+    opacity: .8;
+}
+
+
+.delete-btn {
+    border: 1px solid #fecaca;
+    background: #fff;
+    color: #dc2626;
+    padding: 7px 11px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+
+.knowledge-form {
+    max-width: 900px;
+}
+
+
+.form-row {
+    display: grid;
+    grid-template-columns:
+        1fr 1fr;
+
+    gap: 15px;
+}
+
+
+.form-group {
+    margin-bottom: 17px;
+}
+
+
+label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 7px;
+}
+
+
+input,
+select,
+textarea {
+    width: 100%;
+    box-sizing: border-box;
+
+    border: 1px solid #ddd;
+    border-radius: 10px;
+
+    padding: 11px;
+
+    font-family: inherit;
+    font-size: 14px;
+
+    outline: none;
+}
+
+
+input:focus,
+select:focus,
+textarea:focus {
+    border-color: #6366f1;
+}
+
+
+.add-btn {
+    border: none;
+    border-radius: 10px;
+
+    padding: 12px 20px;
+
+    background: #111827;
+    color: white;
+
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+
+.empty-state {
+    padding: 30px;
+    text-align: center;
+    opacity: .5;
+}
+
+
+@media (max-width: 850px) {
+
+    .stats-grid {
+        grid-template-columns:
+            1fr 1fr;
+    }
+
+    .analytics-grid {
+        grid-template-columns:
+            1fr;
+    }
+}
+
+
+@media (max-width: 550px) {
+
+    .stats-grid {
+        grid-template-columns:
+            1fr;
+    }
+
+    .form-row {
+        grid-template-columns:
+            1fr;
+    }
+
+    .admin-header {
+        align-items: flex-start;
+    }
+}
+
+</style>
+
+
+<script>
+
+async function loadAnalytics() {
+
+    try {
+
+        const statsResponse =
+            await fetch('/api/stats');
+
+        const stats =
+            await statsResponse.json();
+
+
+        document.getElementById(
+            'conversationCount'
+        ).textContent =
+            stats.conversations;
+
+
+        document.getElementById(
+            'messageCount'
+        ).textContent =
+            stats.messages;
+
+
+        document.getElementById(
+            'campusItemCount'
+        ).textContent =
+            stats.campus_items;
+
+
+        const categoryContainer =
+            document.getElementById(
+                'categoryStats'
+            );
+
+        categoryContainer.innerHTML = '';
+
+        for (
+            const [category, count]
+            of Object.entries(stats.categories)
+        ) {
+
+            const row =
+                document.createElement('div');
+
+            row.className =
+                'category-row';
+
+            row.innerHTML = `
+                <span>
+                    ${category.charAt(0).toUpperCase()
+                    + category.slice(1)}
+                </span>
+
+                <strong>
+                    ${count}
+                </strong>
+            `;
+
+            categoryContainer.appendChild(row);
+        }
+
+
+        const feedbackResponse =
+            await fetch('/api/feedback/stats');
+
+        const feedback =
+            await feedbackResponse.json();
+
+
+        document.getElementById(
+            'satisfaction'
+        ).textContent =
+            feedback.satisfaction + '%';
+
+
+        document.getElementById(
+            'helpfulCount'
+        ).textContent =
+            feedback.helpful;
+
+
+        document.getElementById(
+            'notHelpfulCount'
+        ).textContent =
+            feedback.not_helpful;
+
+
+        const total =
+            feedback.total || 1;
+
+
+        document.getElementById(
+            'helpfulBar'
+        ).style.width =
+            (feedback.helpful / total * 100)
+            + '%';
+
+
+        document.getElementById(
+            'notHelpfulBar'
+        ).style.width =
+            (feedback.not_helpful / total * 100)
+            + '%';
+
+    } catch (error) {
+
+        console.error(
+            'Analytics loading error:',
+            error
+        );
+
+    }
+}
+
+
+loadAnalytics();
+
+</script>
+
+{% endblock %}

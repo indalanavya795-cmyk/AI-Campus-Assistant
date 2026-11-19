@@ -1,0 +1,424 @@
+cat > app/templates/chat.html <<'EOF'
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="chat-page">
+
+    <div class="chat-header">
+
+        <div>
+            <h1>Campus AI</h1>
+
+            <div class="online-status">
+                <span class="status-dot"></span>
+                AI Assistant Online
+            </div>
+        </div>
+
+        <div class="chat-category">
+            {{ conversation.category|capitalize }}
+        </div>
+
+    </div>
+
+
+    <div class="messages">
+
+        {% for message in conversation.messages %}
+
+            <div class="message-row {{ message.role }}">
+
+                <div class="avatar">
+
+                    {% if message.role == 'user' %}
+                        You
+                    {% else %}
+                        AI
+                    {% endif %}
+
+                </div>
+
+
+                <div class="message-content">
+
+                    <div class="message-bubble">
+
+                        {{ message.content|replace('\n', '<br>')|safe }}
+
+                    </div>
+
+
+                    {% if message.role == 'assistant' %}
+
+                        {% if message.source %}
+
+                        <div class="source-card">
+
+                            <span>✓ Verified source</span>
+
+                            <small>
+                                {{ message.source }}
+                            </small>
+
+                        </div>
+
+                        {% endif %}
+
+
+                        <div class="feedback-area"
+                             id="feedback-{{ message.id }}">
+
+                            {% if message.feedback %}
+
+                                <span class="feedback-done">
+
+                                    {% if message.feedback.rating == 'helpful' %}
+                                        👍 Thanks! This answer was helpful.
+                                    {% else %}
+                                        👎 Thanks for the feedback.
+                                    {% endif %}
+
+                                </span>
+
+                            {% else %}
+
+                                <span class="feedback-label">
+                                    Was this answer helpful?
+                                </span>
+
+                                <button
+                                    type="button"
+                                    onclick="sendFeedback({{ message.id }}, 'helpful')">
+                                    👍
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onclick="sendFeedback({{ message.id }}, 'not_helpful')">
+                                    👎
+                                </button>
+
+                            {% endif %}
+
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+
+    <div class="suggestions">
+
+        <button onclick="fillQuestion('When is the next exam?')">
+            📚 Exams
+        </button>
+
+        <button onclick="fillQuestion('Where is the library?')">
+            📖 Library
+        </button>
+
+        <button onclick="fillQuestion('Are there any upcoming events?')">
+            🎓 Events
+        </button>
+
+        <button onclick="fillQuestion('Tell me about student services')">
+            🏫 Services
+        </button>
+
+    </div>
+
+
+    <form
+        class="chat-input"
+        method="POST"
+        action="{{ url_for('main.send_message', conversation_id=conversation.id) }}">
+
+        <input
+            id="messageInput"
+            type="text"
+            name="message"
+            placeholder="Ask Campus AI anything..."
+            autocomplete="off"
+            required>
+
+        <button type="submit">
+            Send
+        </button>
+
+    </form>
+
+</div>
+
+
+<style>
+
+.chat-page {
+    max-width: 950px;
+    margin: 30px auto;
+    padding: 0 20px;
+}
+
+.chat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 22px;
+    border-radius: 18px;
+    background: rgba(255,255,255,.95);
+    box-shadow: 0 10px 35px rgba(0,0,0,.08);
+}
+
+.chat-header h1 {
+    margin: 0;
+}
+
+.online-status {
+    font-size: 13px;
+    margin-top: 6px;
+    opacity: .7;
+}
+
+.status-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #22c55e;
+    margin-right: 5px;
+}
+
+.chat-category {
+    padding: 8px 13px;
+    border-radius: 20px;
+    background: #eef2ff;
+    font-size: 13px;
+}
+
+.messages {
+    padding: 25px 0;
+}
+
+.message-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 22px;
+}
+
+.message-row.user {
+    flex-direction: row-reverse;
+}
+
+.avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    background: #e5e7eb;
+    flex-shrink: 0;
+}
+
+.message-row.user .avatar {
+    background: #dbeafe;
+}
+
+.message-content {
+    max-width: 75%;
+}
+
+.message-bubble {
+    padding: 14px 17px;
+    border-radius: 16px;
+    background: white;
+    box-shadow: 0 5px 20px rgba(0,0,0,.06);
+    line-height: 1.6;
+}
+
+.message-row.user .message-bubble {
+    background: #eff6ff;
+}
+
+.source-card {
+    margin-top: 8px;
+    padding: 9px 12px;
+    border-left: 3px solid #22c55e;
+    background: #f8fafc;
+    font-size: 12px;
+}
+
+.source-card span {
+    display: block;
+    font-weight: 600;
+}
+
+.source-card small {
+    opacity: .65;
+}
+
+.feedback-area {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-top: 8px;
+    font-size: 12px;
+}
+
+.feedback-area button {
+    border: 1px solid #e5e7eb;
+    background: white;
+    border-radius: 8px;
+    padding: 5px 9px;
+    cursor: pointer;
+}
+
+.feedback-area button:hover {
+    transform: translateY(-1px);
+}
+
+.feedback-label {
+    opacity: .6;
+}
+
+.feedback-done {
+    opacity: .7;
+}
+
+.suggestions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+}
+
+.suggestions button {
+    border: 1px solid #e5e7eb;
+    background: white;
+    padding: 8px 13px;
+    border-radius: 20px;
+    cursor: pointer;
+}
+
+.chat-input {
+    display: flex;
+    gap: 10px;
+    position: sticky;
+    bottom: 15px;
+    padding: 12px;
+    background: white;
+    border-radius: 18px;
+    box-shadow: 0 10px 35px rgba(0,0,0,.12);
+}
+
+.chat-input input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 15px;
+    padding: 10px;
+}
+
+.chat-input button {
+    border: none;
+    border-radius: 12px;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+@media (max-width: 600px) {
+
+    .chat-page {
+        padding: 0 10px;
+    }
+
+    .message-content {
+        max-width: 85%;
+    }
+
+    .chat-header {
+        padding: 16px;
+    }
+
+    .suggestions button {
+        font-size: 12px;
+    }
+}
+
+</style>
+
+
+<script>
+
+function fillQuestion(question) {
+    document.getElementById('messageInput').value = question;
+    document.getElementById('messageInput').focus();
+}
+
+
+async function sendFeedback(messageId, rating) {
+
+    const container =
+        document.getElementById(
+            'feedback-' + messageId
+        );
+
+    const formData =
+        new FormData();
+
+    formData.append(
+        'message_id',
+        messageId
+    );
+
+    formData.append(
+        'rating',
+        rating
+    );
+
+    try {
+
+        const response =
+            await fetch(
+                "{{ url_for('main.submit_feedback') }}",
+                {
+                    method: 'POST',
+                    body: formData
+                }
+            );
+
+        const data =
+            await response.json();
+
+        if (data.success) {
+
+            container.innerHTML =
+                rating === 'helpful'
+                ? '<span class="feedback-done">👍 Thanks! This answer was helpful.</span>'
+                : '<span class="feedback-done">👎 Thanks for the feedback.</span>';
+
+        }
+
+    } catch (error) {
+
+        console.error(
+            'Feedback error:',
+            error
+        );
+
+    }
+}
+
+</script>
+
+{% endblock %}
+EOF

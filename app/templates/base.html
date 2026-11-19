@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{% block title %}Campus Assistant{% endblock %}</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+</head>
+
+<body>
+
+<div class="app">
+
+    <aside class="sidebar">
+
+        <div class="brand">
+            <div class="brand-icon">🎓</div>
+
+            <div>
+                <div class="brand-name">
+                    Campus AI
+                </div>
+
+                <div class="brand-subtitle">
+                    Student Assistant
+                </div>
+            </div>
+        </div>
+
+        <a class="new-chat" href="{{ url_for('main.index') }}">
+            <span>＋</span>
+            New conversation
+        </a>
+
+        <div class="sidebar-section">
+            <div class="section-title">
+                CONVERSATIONS
+            </div>
+
+            {% for item in conversations %}
+                <a
+                    class="conversation-link {% if conversation is defined and conversation.id == item.id %}active{% endif %}"
+                    href="{{ url_for('main.chat', conversation_id=item.id) }}"
+                >
+                    <span>💬</span>
+                    <span>{{ item.title }}</span>
+                </a>
+            {% else %}
+                <div class="empty-sidebar">
+                    No conversations yet.
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="sidebar-bottom">
+            <a href="{{ url_for('main.admin_login') }}">
+                ⚙ Admin
+            </a>
+        </div>
+
+    </aside>
+
+
+    <main class="main">
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="flash">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+
+    </main>
+
+</div>
+
+</body>
+</html>
